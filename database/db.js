@@ -1,27 +1,35 @@
 const fs = require("fs/promises")
 const path = require("path")
-const filePath = path.join(__dirname,"db.json")
 
-const readData = async() => {
+const databaseFile = path.join(__dirname, "db.json")
+
+const loadData = async () => {
     try {
-        let RawData = await fs.readFile(filePath,'utf-8')
-        return JSON.parse(RawData)
-    }
-    catch (err) {
-        return {"error" : `found error on reading file ${err}`}
+        const content = await fs.readFile(databaseFile, "utf-8")
+        return JSON.parse(content)
+    } catch (error) {
+        return {
+            error: `found error on reading file ${error}`
+        }
     }
 }
-const delayReadData = async() => {
-    await new Promise((res,rej)=>{
-        setTimeout(res,(5*1000))
+
+const readWithDelay = async () => {
+    await new Promise((resolve) => {
+        setTimeout(resolve, 5000)
     })
-    return await readData()
+
+    return loadData()
 }
-const writeIntoFile = (data) => {
-    return fs.writeFile(filePath,JSON.stringify(data,null,2))
+
+const saveData = (data) => {
+    return fs.writeFile(
+        databaseFile,
+        JSON.stringify(data, null, 2)
+    )
 }
 
 module.exports = {
-    delayReadData,
-    writeIntoFile
+    delayReadData: readWithDelay,
+    writeIntoFile: saveData
 }

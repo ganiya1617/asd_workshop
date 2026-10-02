@@ -1,42 +1,47 @@
-const delayReadData = require("../database/db")
-const cache = {}
+const database = require("../database/db")
 
-const productsCache = async(req,res,next) => {
-    let url = req.originalUrl
-    let cachedData = cache[url]
+const cacheStore = {}
 
-    if (req.method!=="GET"){
-        Object.keys(cache).forEach((keys)=>{
-            if (cache[keys] && keys.startsWith("/products")){
-                delete cache[keys]
+const productCacheMiddleware = async (req, res, next) => {
+    const requestUrl = req.originalUrl
+    const saved = cacheStore[requestUrl]
+
+    if (req.method !== "GET") {
+        Object.keys(cacheStore).forEach((key) => {
+            if (cacheStore[key] && key.startsWith("/products")) {
+                delete cacheStore[key]
             }
         })
+
         next()
         return
     }
 
-    if (cachedData && Date.now()<=cachedData.expiresAt){
-        res.set("cache","HIT")
-        return res.json(cachedData.data)
+    if (saved && Date.now() <= saved.expiresAt) {
+        res.set("cache", "HIT")
+        return res.json(saved.data)
     }
 
-    else if (cachedData && Date.now()>cachedData.expiresAt){
-        // console.log("new value assgined")
-        delete cache[url] 
+    if (saved && Date.now() > saved.expiresAt) {
+        delete cacheStore[requestUrl]
     }
 
-    res.set("cache","MISS")
-    originalJSON  = res.json.bind(res)
+    res.set("cache", "MISS")
+
+    const sendResponse = res.json.bind(res)
+
     res.json = (data) => {
-        cache[url] = {
-            data ,
-            expiresAt : Date.now()+(60*1000),  
-        } 
-        return originalJSON(data)
+        cacheStore[requestUrl] = {
+            data: data,
+            expiresAt: Date.now() + (60 * 1000)
+        }
+
+        return sendResponse(data)
     }
+
     next()
 }
 
 module.exports = {
-    productsCache
+    productCacheMiddleware
 }

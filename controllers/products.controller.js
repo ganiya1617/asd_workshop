@@ -1,46 +1,62 @@
-const productServices = require("../services/products.service")
+const productService = require("../services/products.service")
 
-const getProducts = async(req,res) => {
-    const products = await productServices.QueryProduct(req.query)
-    res.json(products)
+const fetchProducts = async (req, res) => {
+    const data = await productService.getProducts(req.query)
+    res.json(data)
 }
 
-const getProductId = async(req,res)=>{
-    let id = Number(req.params.id)
-    let productID = await productServices.findProductId(id)
-    res.json(productID)
+const fetchProduct = async (req, res) => {
+    const productId = Number(req.params.id)
+
+    const data = await productService.getProductById(productId)
+
+    res.json(data)
 }
 
-const insertProducts = async(req,res)=>{
-    let product = await productServices.insertIntoProducts(req.body)
-    res.status(201).json(product)
+const createProduct = async (req, res) => {
+    const data = await productService.createProduct(req.body)
+
+    res.status(201).json(data)
 }
 
-const putProduct = async(req,res)=>{
-    let id = Number(req.params.id)
-    let price = Number(req.body.price)
-    let name = req.body.name
-    let updatedProduct = await productServices.putIntoProduct({id,name,price})
-    res.status(200).json(updatedProduct)
+const replaceProduct = async (req, res) => {
+    const productId = Number(req.params.id)
+    const productPrice = Number(req.body.price)
+    const productName = req.body.name
+
+    const data = await productService.replaceProduct({
+        id: productId,
+        name: productName,
+        price: productPrice
+    })
+
+    res.status(200).json(data)
 }
 
-const patchProduct = async(req,res)=>{
-    let id = Number(req.params.id)
-    let updatedProduct = await productServices.patchIntoProduct(req.body,id)
-    res.status(200).json(updatedProduct)
+const updateProduct = async (req, res) => {
+    const productId = Number(req.params.id)
+
+    const data = await productService.updateProduct(
+        req.body,
+        productId
+    )
+
+    res.status(200).json(data)
 }
 
-const deleteProduct = async(req,res)=>{
-    let id = Number(req.params.id)
-    let deletedProduct = await productServices.deleteFromProduct(id)
-    res.status(200).json(deletedProduct)
+const removeProduct = async (req, res) => {
+    const productId = Number(req.params.id)
+
+    const data = await productService.removeProduct(productId)
+
+    res.status(200).json(data)
 }
 
 module.exports = {
-    getProducts,
-    getProductId,
-    insertProducts,
-    putProduct,
-    patchProduct,
-    deleteProduct
+    fetchProducts,
+    fetchProduct,
+    createProduct,
+    replaceProduct,
+    updateProduct,
+    removeProduct
 }

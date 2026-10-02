@@ -1,11 +1,19 @@
-const validatePostReq = (req,res,next) => {
-    const {name,price} = req.body
-    if (name===undefined || name.trim()==="" || !Number.isInteger(price)){
+const validateProduct = (req, res, next) => {
+
+    const productName = req.body.name
+    const productPrice = req.body.price
+
+    if (
+        productName === undefined ||
+        productName.trim() === "" ||
+        !Number.isInteger(productPrice)
+    ) {
         return res.status(400).send("error")
     }
+
     next()
 }
 
 module.exports = {
-    validatePostReq
+    validateProduct
 }

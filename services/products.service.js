@@ -1,84 +1,111 @@
 const database = require("../database/db")
 
-const QueryProduct = async(query) => {
-    let filterProduct = await database.delayReadData()
-    let {name,minPrice,maxPrice} = query
+const getProducts = async (query) => {
+    let products = await database.delayReadData()
+
+    let { name, minPrice, maxPrice } = query
+
     minPrice = Number(minPrice)
     maxPrice = Number(maxPrice)
-    
-    if (name && name.trim()!==""){
-        filterProduct = filterProduct.filter(el => el.name.toLowerCase().includes(name.toLowerCase()))
+
+    if (name && name.trim() !== "") {
+        products = products.filter((product) =>
+            product.name.toLowerCase().includes(name.toLowerCase())
+        )
     }
-    if (minPrice && typeof minPrice === 'number' && Number.isFinite(minPrice)){
-        filterProduct = filterProduct.filter(el => el.price>=minPrice)
+
+    if (Number.isFinite(minPrice) && minPrice) {
+        products = products.filter((product) => product.price >= minPrice)
     }
-    if (maxPrice && typeof maxPrice === 'number' && Number.isFinite(maxPrice)){
-        filterProduct = filterProduct.filter(el => el.price<=maxPrice)
+
+    if (Number.isFinite(maxPrice) && maxPrice) {
+        products = products.filter((product) => product.price <= maxPrice)
     }
-    return filterProduct
+
+    return products
 }
 
-const findProductId = async(id) => {
-    const data = await database.delayReadData()
-    return data.find(el => el.id===id)
+const getProductById = async (productId) => {
+    const products = await database.delayReadData()
+
+    return products.find((product) => product.id === productId)
 }
 
-const insertIntoProducts = async({name,price}) => {
-    let data = await database.delayReadData()
-    newProduct = {
-        id : data.length+1, 
-        name, 
-        price
+const createProduct = async (productData) => {
+    const products = await database.delayReadData()
+
+    const product = {
+        id: products.length + 1,
+        name: productData.name,
+        price: productData.price
     }
-    data.push(newProduct)
-    await database.writeIntoFile(data)
-    return newProduct
+
+    products.push(product)
+
+    await database.writeIntoFile(products)
+
+    return product
 }
 
-const putIntoProduct = async(newData) => {
-    let data = await database.delayReadData()
-    let updatedProduct = data.map((el)=>{
-        if (el.id===newData.id){
-            return newData
+const replaceProduct = async (productData) => {
+    const products = await database.delayReadData()
+
+    const updatedProducts = products.map((product) => {
+        if (product.id === productData.id) {
+            return productData
         }
-        return el
-    })
-    await database.writeIntoFile(updatedProduct)
-    return newData
-} 
 
-const patchIntoProduct = async(data,id) => {
-    product = await database.delayReadData()
-    let feild = ["name","price"]
-    let newData
-    let updatedProduct = product.map((el)=>{
-        if (el.id===id){
-            feild.forEach((keys)=>{
-                if (data[keys]){
-                    el[keys]=data[keys]
-                }
-            })
-            newData=el
+        return product
+    })
+
+    await database.writeIntoFile(updatedProducts)
+
+    return productData
+}
+
+const updateProduct = async (changes, productId) => {
+    const products = await database.delayReadData()
+
+    const updatedProducts = products.map((product) => {
+        if (product.id === productId) {
+            if (changes.name) {
+                product.name = changes.name
+            }
+
+            if (changes.price) {
+                product.price = changes.price
+            }
         }
-        return el
-    })
-    await database.writeIntoFile(updatedProduct)
-    return newData
-} 
 
-const deleteFromProduct = async(id) => {
-    let data = await database.delayReadData()
-    let deletedData = data.find(el => el.id===id)
-    let newData = data.filter(el => el.id!==id)
-    await database.writeIntoFile(newData)
-    return deletedData
+        return product
+    })
+
+    await database.writeIntoFile(updatedProducts)
+
+    return updatedProducts.find((product) => product.id === productId)
+}
+
+const removeProduct = async (productId) => {
+    const products = await database.delayReadData()
+
+    const deletedProduct = products.find(
+        (product) => product.id === productId
+    )
+
+    const remainingProducts = products.filter(
+        (product) => product.id !== productId
+    )
+
+    await database.writeIntoFile(remainingProducts)
+
+    return deletedProduct
 }
 
 module.exports = {
-    QueryProduct,
-    findProductId,
-    insertIntoProducts,
-    putIntoProduct,
-    patchIntoProduct,
-    deleteFromProduct
+    getProducts,
+    getProductById,
+    createProduct,
+    replaceProduct,
+    updateProduct,
+    removeProduct
 }
